@@ -1,0 +1,875 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Unidades - Base de Datos II</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --azul-oscuro: #0a0e1a;
+      --azul-navy: #0d1b2e;
+      --azul-medio: #112240;
+      --cian: #00e5ff;
+      --blanco: #ffffff;
+      --gris: #a0b4c8;
+    }
+
+    body {
+      font-family: 'Lato', sans-serif;
+      background-color: var(--azul-oscuro);
+      color: var(--blanco);
+      min-height: 100vh;
+    }
+
+    /* HEADER - Mismo estilo que el index (horizontal) */
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background-color: var(--azul-navy);
+      padding: 15px 40px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.7);
+      flex-wrap: wrap;
+      gap: 20px;
+      z-index: 10;
+    }
+    .logo-area {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+    header img {
+      width: 140px;
+      height: 70px;
+      object-fit: cover;
+      border-radius: 10px;
+    }
+    header h1 {
+      font-family: 'Cinzel', serif;
+      font-size: 1.6em;
+      color: var(--cian);
+      margin: 0;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      text-shadow: 0 0 18px rgba(0, 229, 255, 0.6);
+      white-space: nowrap;
+    }
+    /* Barra de navegación visible */
+    .nav-menu {
+      display: flex;
+      gap: 15px;
+      background: rgba(0,0,0,0.3);
+      padding: 8px 20px;
+      border-radius: 50px;
+      backdrop-filter: blur(4px);
+    }
+    .nav-menu a {
+      text-decoration: none;
+      color: var(--blanco);
+      font-weight: 600;
+      padding: 8px 18px;
+      border-radius: 40px;
+      transition: all 0.3s;
+      font-size: 0.9em;
+      letter-spacing: 0.5px;
+      border: 1px solid transparent;
+    }
+    .nav-menu a:hover {
+      background: var(--cian);
+      color: var(--azul-navy);
+      border-color: var(--cian);
+      box-shadow: 0 0 12px rgba(0,229,255,0.5);
+    }
+
+    /* HERO UNIDADES */
+    .hero-unidades {
+      background: linear-gradient(135deg, #0d1b2e 0%, #0a0e1a 70%);
+      padding: 60px 50px 50px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .hero-unidades::before {
+      content: '';
+      position: absolute;
+      top: -80px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 600px;
+      height: 300px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(0,229,255,0.07) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .hero-unidades .subtitulo {
+      font-size: 0.85em;
+      color: var(--cian);
+      letter-spacing: 4px;
+      text-transform: uppercase;
+      margin-bottom: 12px;
+    }
+    .hero-unidades h2 {
+      font-family: 'Cinzel', serif;
+      font-size: 2.4em;
+      color: var(--blanco);
+      margin-bottom: 12px;
+    }
+    .hero-unidades p {
+      color: var(--gris);
+      max-width: 600px;
+      margin: 0 auto;
+      line-height: 1.8;
+      font-size: 0.95em;
+    }
+
+    /* TABS */
+    .tabs-wrapper {
+      background: var(--azul-navy);
+      border-bottom: 1px solid rgba(0,229,255,0.15);
+      position: sticky;
+      top: 0;
+      z-index: 50;
+    }
+    .tabs {
+      display: flex;
+      justify-content: center;
+      max-width: 900px;
+      margin: 0 auto;
+    }
+    .tab-btn {
+      flex: 1;
+      padding: 20px 10px;
+      background: none;
+      border: none;
+      color: var(--gris);
+      font-family: 'Cinzel', serif;
+      font-size: 0.9em;
+      letter-spacing: 1px;
+      cursor: pointer;
+      transition: all 0.3s;
+      border-bottom: 3px solid transparent;
+      text-transform: uppercase;
+    }
+    .tab-btn:hover { color: var(--cian); }
+    .tab-btn.active {
+      color: var(--cian);
+      border-bottom: 3px solid var(--cian);
+      text-shadow: 0 0 12px rgba(0,229,255,0.5);
+    }
+
+    /* CONTENIDO */
+    .unidad-contenido {
+      display: none;
+      max-width: 1000px;
+      margin: 0 auto;
+      padding: 60px 40px;
+      animation: fadeUp 0.5s ease forwards;
+    }
+    .unidad-contenido.activo { display: block; }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* HEADER UNIDAD */
+    .unidad-header {
+      display: flex;
+      align-items: center;
+      gap: 25px;
+      margin-bottom: 45px;
+      padding-bottom: 30px;
+      border-bottom: 1px solid rgba(0,229,255,0.15);
+    }
+    .unidad-numero {
+      font-family: 'Cinzel', serif;
+      font-size: 4em;
+      color: rgba(0,229,255,0.12);
+      line-height: 1;
+      flex-shrink: 0;
+    }
+    .unidad-info .etiqueta {
+      font-size: 0.78em;
+      color: var(--cian);
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      margin-bottom: 6px;
+    }
+    .unidad-info h3 {
+      font-family: 'Cinzel', serif;
+      font-size: 1.7em;
+      color: var(--blanco);
+      margin-bottom: 10px;
+    }
+    .unidad-info p {
+      color: var(--gris);
+      line-height: 1.7;
+      font-size: 0.93em;
+    }
+
+    /* SEMANAS */
+    .semanas-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 25px;
+    }
+
+    .semana-card {
+      background: var(--azul-navy);
+      border: 1px solid rgba(0,229,255,0.12);
+      border-radius: 14px;
+      overflow: hidden;
+      transition: transform 0.3s, border-color 0.3s, box-shadow 0.3s;
+    }
+    .semana-card:hover {
+      transform: translateY(-4px);
+      border-color: rgba(0,229,255,0.4);
+      box-shadow: 0 12px 35px rgba(0,229,255,0.1);
+    }
+    .semana-card.completada { border-color: rgba(0,229,255,0.35); }
+    .semana-card.completada .semana-header {
+      background: linear-gradient(90deg, rgba(0,229,255,0.13), transparent);
+    }
+
+    .semana-header {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      padding: 18px 22px;
+      background: linear-gradient(90deg, rgba(0,229,255,0.08), transparent);
+      border-bottom: 1px solid rgba(0,229,255,0.1);
+      cursor: pointer;
+      user-select: none;
+    }
+    .semana-numero {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      border: 2px solid var(--cian);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Cinzel', serif;
+      font-size: 0.85em;
+      color: var(--cian);
+      flex-shrink: 0;
+      transition: background 0.3s, color 0.3s;
+    }
+    .semana-card.completada .semana-numero {
+      background: var(--cian);
+      color: var(--azul-navy);
+      font-weight: bold;
+    }
+    .semana-titulo {
+      flex: 1;
+      font-size: 0.92em;
+      font-weight: 700;
+      color: var(--blanco);
+      letter-spacing: 0.5px;
+    }
+    .semana-arrow {
+      color: var(--cian);
+      font-size: 0.8em;
+      transition: transform 0.3s;
+    }
+    .semana-card.abierta .semana-arrow { transform: rotate(180deg); }
+
+    .semana-body {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.4s ease;
+    }
+    .semana-card.abierta .semana-body { max-height: 2400px; }
+    .semana-body-inner { padding: 20px 22px; }
+
+    /* ACTIVIDADES (ejemplo, se mantienen) */
+    .actividad-lista { list-style: none; }
+    .actividad-lista li {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 12px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+      color: var(--gris);
+      font-size: 0.9em;
+      line-height: 1.6;
+    }
+    .actividad-lista li:last-child { border-bottom: none; }
+    .act-icono { font-size: 1.1em; flex-shrink: 0; margin-top: 1px; }
+    .act-texto strong {
+      display: block;
+      color: var(--blanco);
+      font-size: 0.92em;
+      margin-bottom: 3px;
+    }
+    .badge {
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-size: 0.72em;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      margin-top: 6px;
+    }
+    .badge-teoria     { background: rgba(0,229,255,0.1);  color: var(--cian);  border: 1px solid rgba(0,229,255,0.3); }
+    .badge-practica   { background: rgba(0,255,150,0.08); color: #00ff96;      border: 1px solid rgba(0,255,150,0.25); }
+    .badge-tarea      { background: rgba(255,200,0,0.08); color: #ffd000;      border: 1px solid rgba(255,200,0,0.25); }
+    .badge-evaluacion { background: rgba(255,80,80,0.08); color: #ff6b6b;      border: 1px solid rgba(255,80,80,0.25); }
+
+    /* ARCHIVOS GITHUB */
+    .gh-archivos-section {
+      margin-top: 14px;
+      border-top: 1px solid rgba(0,229,255,0.12);
+      padding-top: 14px;
+    }
+    .gh-archivos-titulo {
+      font-size: 0.78em;
+      color: var(--cian);
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 7px;
+    }
+    .gh-archivos-lista {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+    .gh-archivo-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(0,229,255,0.04);
+      border: 1px solid rgba(0,229,255,0.1);
+      border-radius: 8px;
+      padding: 8px 10px;
+      font-size: 0.82em;
+      transition: border-color 0.2s, background 0.2s;
+    }
+    .gh-archivo-item:hover {
+      border-color: rgba(0,229,255,0.35);
+      background: rgba(0,229,255,0.08);
+    }
+    .gh-archivo-nombre {
+      flex: 1;
+      color: #c8ddf0;
+      word-break: break-all;
+    }
+    .gh-archivo-size {
+      color: #4a6a8a;
+      font-size: 0.85em;
+      white-space: nowrap;
+    }
+    .gh-btn-dl {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 4px 10px;
+      background: rgba(0,229,255,0.08);
+      border: 1px solid rgba(0,229,255,0.25);
+      border-radius: 20px;
+      color: var(--cian);
+      font-size: 0.78em;
+      font-weight: 700;
+      text-decoration: none;
+      transition: all 0.2s;
+      white-space: nowrap;
+    }
+    .gh-btn-dl:hover {
+      background: rgba(0,229,255,0.2);
+      border-color: var(--cian);
+    }
+    .gh-sin-archivos {
+      color: #3a5a7a;
+      font-size: 0.8em;
+      font-style: italic;
+      padding: 4px 2px;
+    }
+    .gh-loading {
+      color: #3a6080;
+      font-size: 0.8em;
+      display: flex;
+      align-items: center;
+      gap: 7px;
+    }
+    .gh-mini-spin {
+      width: 12px; height: 12px;
+      border: 1.5px solid rgba(0,229,255,0.25);
+      border-top-color: var(--cian);
+      border-radius: 50%;
+      animation: ghspin 0.7s linear infinite;
+      flex-shrink: 0;
+    }
+    @keyframes ghspin { to { transform: rotate(360deg); } }
+    .gh-no-config {
+      color: #3a5272;
+      font-size: 0.78em;
+      font-style: italic;
+    }
+
+    /* PROGRESO UNIDAD */
+    .progreso-unidad {
+      margin-top: 40px;
+      background: var(--azul-navy);
+      border: 1px solid rgba(0,229,255,0.12);
+      border-radius: 14px;
+      padding: 25px 30px;
+    }
+    .progreso-unidad h4 {
+      font-family: 'Cinzel', serif;
+      font-size: 1em;
+      color: var(--cian);
+      margin-bottom: 15px;
+      letter-spacing: 1px;
+    }
+    .progreso-barra-fondo {
+      background: var(--azul-medio);
+      border-radius: 20px;
+      height: 12px;
+      overflow: hidden;
+      margin-bottom: 10px;
+    }
+    .progreso-barra-relleno {
+      height: 100%;
+      border-radius: 20px;
+      width: 0%;
+      background: linear-gradient(90deg, #005f73, var(--cian));
+      box-shadow: 0 0 12px rgba(0,229,255,0.4);
+      transition: width 0.7s ease;
+    }
+    .progreso-info {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.82em;
+      color: var(--gris);
+      align-items: center;
+    }
+    .progreso-porcentaje {
+      font-family: 'Cinzel', serif;
+      font-size: 1.4em;
+      color: var(--cian);
+      text-shadow: 0 0 10px rgba(0,229,255,0.4);
+    }
+    .semana-indicadores {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+    .sem-dot {
+      flex: 1;
+      height: 6px;
+      border-radius: 10px;
+      background: var(--azul-medio);
+      transition: background 0.5s;
+    }
+    .sem-dot.hecha { background: var(--cian); box-shadow: 0 0 8px rgba(0,229,255,0.5); }
+    .badge-completado {
+      display: none;
+      align-items: center;
+      gap: 8px;
+      background: rgba(0,229,255,0.1);
+      border: 1px solid rgba(0,229,255,0.3);
+      border-radius: 8px;
+      padding: 10px 16px;
+      margin-top: 14px;
+      font-size: 0.88em;
+      color: var(--cian);
+    }
+    .badge-completado.visible { display: flex; }
+
+    .divisor {
+      width: 100%;
+      height: 1px;
+      background: linear-gradient(to right, transparent, var(--cian), transparent);
+    }
+
+    footer {
+      background-color: var(--azul-navy);
+      text-align: center;
+      padding: 20px;
+      color: var(--cian);
+      border-top: 1px solid rgba(0,229,255,0.15);
+    }
+
+    @media (max-width: 900px) {
+      header {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+      }
+      .logo-area {
+        flex-direction: column;
+      }
+      header h1 {
+        white-space: normal;
+        font-size: 1.4em;
+      }
+      .nav-menu {
+        flex-wrap: wrap;
+        justify-content: center;
+        border-radius: 20px;
+      }
+    }
+    @media (max-width: 768px) {
+      .semanas-grid { grid-template-columns: 1fr; }
+      .tabs { overflow-x: auto; }
+      .tab-btn { font-size: 0.75em; padding: 15px 8px; }
+      .unidad-contenido { padding: 40px 20px; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="logo-area">
+    <img src="lgUpla.png" alt="Logo UPLA">
+    <h1>Mi Portafolio Academico</h1>
+  </div>
+  <div class="nav-menu">
+    <a href="index.html">Inicio</a>
+    <a href="sobreMi.html">Sobre mí</a>
+    <a href="unidades.html">Unidades</a>
+    <a href="login.html">Iniciar Sección</a>
+  </div>
+</header>
+
+<section class="hero-unidades">
+  <p class="subtitulo">✦ Base de Datos II</p>
+  <h2>Unidades del Curso</h2>
+  <p>El progreso se actualiza automáticamente según los archivos subidos a cada semana.</p>
+</section>
+
+<div class="divisor"></div>
+
+<div class="tabs-wrapper">
+  <div class="tabs">
+    <button class="tab-btn active" onclick="mostrarUnidad(1, this)">Unidad I</button>
+    <button class="tab-btn"        onclick="mostrarUnidad(2, this)">Unidad II</button>
+    <button class="tab-btn"        onclick="mostrarUnidad(3, this)">Unidad III</button>
+    <button class="tab-btn"        onclick="mostrarUnidad(4, this)">Unidad IV</button>
+  </div>
+</div>
+
+<!-- UNIDAD 1 -->
+<div id="unidad-1" class="unidad-contenido activo">
+  <div class="unidad-header">
+    <div class="unidad-numero">01</div>
+    <div class="unidad-info">
+      <p class="etiqueta">✦ Unidad I</p>
+      <h3>Fundamentos y Modelado de BD</h3>
+      <p>Repaso de conceptos clave, modelo entidad-relación, normalización y diseño lógico de bases de datos relacionales.</p>
+    </div>
+  </div>
+  <div class="semanas-grid" id="semanas-grid-1">
+    <!-- Las semanas se generarán con JS para mantener consistencia -->
+  </div>
+  <div class="progreso-unidad">
+    <h4>📊 Progreso de la Unidad I</h4>
+    <div class="semana-indicadores" id="dots-1"><div class="sem-dot"></div><div class="sem-dot"></div><div class="sem-dot"></div><div class="sem-dot"></div></div>
+    <div class="progreso-barra-fondo"><div class="progreso-barra-relleno" id="barra-1"></div></div>
+    <div class="progreso-info"><span id="texto-1">0 de 4 semanas completadas</span><span class="progreso-porcentaje" id="pct-1">0%</span></div>
+    <div class="badge-completado" id="completado-1">🎉 ¡Unidad I completada al 100%!</div>
+  </div>
+</div>
+
+<!-- UNIDAD 2 -->
+<div id="unidad-2" class="unidad-contenido">
+  <div class="unidad-header"><div class="unidad-numero">02</div><div class="unidad-info"><p class="etiqueta">✦ Unidad II</p><h3>SQL Avanzado y Consultas Complejas</h3><p>Dominio del lenguaje SQL: subconsultas, joins, funciones de agregación, vistas y optimización.</p></div></div>
+  <div class="semanas-grid" id="semanas-grid-2"></div>
+  <div class="progreso-unidad"><h4>📊 Progreso de la Unidad II</h4><div class="semana-indicadores" id="dots-2"><div class="sem-dot"></div><div class="sem-dot"></div><div class="sem-dot"></div><div class="sem-dot"></div></div><div class="progreso-barra-fondo"><div class="progreso-barra-relleno" id="barra-2"></div></div><div class="progreso-info"><span id="texto-2">0 de 4 semanas completadas</span><span class="progreso-porcentaje" id="pct-2">0%</span></div><div class="badge-completado" id="completado-2">🎉 ¡Unidad II completada al 100%!</div></div>
+</div>
+
+<!-- UNIDAD 3 -->
+<div id="unidad-3" class="unidad-contenido">
+  <div class="unidad-header"><div class="unidad-numero">03</div><div class="unidad-info"><p class="etiqueta">✦ Unidad III</p><h3>Programación en BD: PL/SQL</h3><p>Procedimientos almacenados, funciones, triggers y cursores.</p></div></div>
+  <div class="semanas-grid" id="semanas-grid-3"></div>
+  <div class="progreso-unidad"><h4>📊 Progreso de la Unidad III</h4><div class="semana-indicadores" id="dots-3"><div class="sem-dot"></div><div class="sem-dot"></div><div class="sem-dot"></div><div class="sem-dot"></div></div><div class="progreso-barra-fondo"><div class="progreso-barra-relleno" id="barra-3"></div></div><div class="progreso-info"><span id="texto-3">0 de 4 semanas completadas</span><span class="progreso-porcentaje" id="pct-3">0%</span></div><div class="badge-completado" id="completado-3">🎉 ¡Unidad III completada al 100%!</div></div>
+</div>
+
+<!-- UNIDAD 4 -->
+<div id="unidad-4" class="unidad-contenido">
+  <div class="unidad-header"><div class="unidad-numero">04</div><div class="unidad-info"><p class="etiqueta">✦ Unidad IV</p><h3>Administración, Seguridad y Proyecto Final</h3><p>Transacciones, respaldo, seguridad y proyecto integrador.</p></div></div>
+  <div class="semanas-grid" id="semanas-grid-4"></div>
+  <div class="progreso-unidad"><h4>📊 Progreso de la Unidad IV</h4><div class="semana-indicadores" id="dots-4"><div class="sem-dot"></div><div class="sem-dot"></div><div class="sem-dot"></div><div class="sem-dot"></div></div><div class="progreso-barra-fondo"><div class="progreso-barra-relleno" id="barra-4"></div></div><div class="progreso-info"><span id="texto-4">0 de 4 semanas completadas</span><span class="progreso-porcentaje" id="pct-4">0%</span></div><div class="badge-completado" id="completado-4">🎉 ¡Unidad IV completada al 100%!</div></div>
+</div>
+
+<footer>© 2026 Universidad Peruana Los Andes</footer>
+
+<script>
+  /* ── GITHUB CONFIG ── */
+  let GH = null;
+  try {
+    const raw = localStorage.getItem('gh_cfg');
+    if (raw) GH = JSON.parse(raw);
+  } catch(e) {}
+
+  function ghPath(rel) {
+    const root = GH && GH.root ? GH.root.replace(/\/$/, '') : '';
+    return root ? root + '/' + rel : rel;
+  }
+
+  function fileEmoji(name) {
+    const ext = (name.split('.').pop() || '').toLowerCase();
+    const m = {
+      pdf:'📄', png:'🖼', jpg:'🖼', jpeg:'🖼', gif:'🖼',
+      mp4:'🎬', mp3:'🎵', zip:'🗜', rar:'🗜',
+      doc:'📝', docx:'📝', xls:'📊', xlsx:'📊',
+      ppt:'📋', pptx:'📋', txt:'📃',
+      js:'💻', html:'💻', css:'💻', py:'💻', sql:'🗄'
+    };
+    return m[ext] || '📎';
+  }
+
+  function fmtSize(b) {
+    if (!b) return '';
+    if (b < 1024) return b + ' B';
+    if (b < 1048576) return Math.round(b / 1024) + ' KB';
+    return (b / 1048576).toFixed(1) + ' MB';
+  }
+
+  // Estados de semanas completadas (caché para evitar recargas innecesarias)
+  const semanasCompletadas = { 1:{}, 2:{}, 3:{}, 4:{} };
+
+  // Generar estructura de semanas dinámicamente
+  const titulosSemanas = {
+    1: ["Introducción al Curso", "Modelo Entidad-Relación", "Normalización", "Evaluación Unidad I"],
+    2: ["JOINs y Subconsultas", "Funciones y Agrupamiento", "Vistas y Optimización", "Evaluación Unidad II"],
+    3: ["Introducción a PL/SQL", "Procedimientos y Funciones", "Triggers y Cursores", "Evaluación Unidad III"],
+    4: ["Transacciones y Concurrencia", "Seguridad y Respaldo", "Proyecto Final", "Sustentación Final"]
+  };
+
+  // Construir las semanas para cada unidad
+  for (let u = 1; u <= 4; u++) {
+    const grid = document.getElementById(`semanas-grid-${u}`);
+    if (!grid) continue;
+    grid.innerHTML = '';
+    for (let s = 1; s <= 4; s++) {
+      const card = document.createElement('div');
+      card.className = 'semana-card';
+      card.id = `u${u}s${s}`;
+      card.innerHTML = `
+        <div class="semana-header" onclick="toggleSemana('u${u}s${s}')">
+          <div class="semana-numero">S${s}</div>
+          <div class="semana-titulo">Semana ${s} — ${titulosSemanas[u][s-1]}</div>
+          <div class="semana-arrow">▼</div>
+        </div>
+        <div class="semana-body">
+          <div class="semana-body-inner">
+            <ul class="actividad-lista">
+              <li><span class="act-icono">📖</span><div class="act-texto"><strong>Material y recursos</strong>Archivos subidos en GitHub.<span class="badge badge-teoria">Teoría/Práctica</span></div></li>
+            </ul>
+            <div class="gh-archivos-section">
+              <div class="gh-archivos-titulo">📎 Archivos</div>
+              <div id="gh-u${u}s${s}" class="gh-loading"><span class="gh-mini-spin"></span>Cargando...</div>
+            </div>
+          </div>
+        </div>
+      `;
+      grid.appendChild(card);
+    }
+  }
+
+  // Función para marcar una semana como completada o no (actualiza UI y caché)
+  function marcarSemanaCompletada(unidad, semana, completada) {
+    const card = document.getElementById(`u${unidad}s${semana}`);
+    if (!card) return;
+    semanasCompletadas[unidad][semana] = completada;
+    const numeroDiv = card.querySelector('.semana-numero');
+    if (completada) {
+      card.classList.add('completada');
+      numeroDiv.textContent = '✓';
+    } else {
+      card.classList.remove('completada');
+      numeroDiv.textContent = `S${semana}`;
+    }
+    actualizarProgresoUnidad(unidad);
+  }
+
+  // Actualizar barra, puntos y mensaje de unidad según semanas completadas
+  function actualizarProgresoUnidad(unidad) {
+    let completadas = 0;
+    for (let s = 1; s <= 4; s++) {
+      if (semanasCompletadas[unidad][s]) completadas++;
+    }
+    const total = 4;
+    const porcentaje = Math.round((completadas / total) * 100);
+    const barra = document.getElementById(`barra-${unidad}`);
+    const pctSpan = document.getElementById(`pct-${unidad}`);
+    const textoSpan = document.getElementById(`texto-${unidad}`);
+    const dotsContainer = document.getElementById(`dots-${unidad}`);
+    const completadoDiv = document.getElementById(`completado-${unidad}`);
+
+    if (barra) barra.style.width = porcentaje + '%';
+    if (pctSpan) pctSpan.textContent = porcentaje + '%';
+    if (textoSpan) textoSpan.textContent = `${completadas} de ${total} semanas completadas`;
+    if (dotsContainer) {
+      const dots = dotsContainer.querySelectorAll('.sem-dot');
+      dots.forEach((dot, idx) => {
+        if (idx < completadas) dot.classList.add('hecha');
+        else dot.classList.remove('hecha');
+      });
+    }
+    if (completadoDiv) {
+      if (completadas === total) completadoDiv.classList.add('visible');
+      else completadoDiv.classList.remove('visible');
+    }
+  }
+
+  // Cargar archivos de una semana y determinar si está completada (al menos un archivo)
+  async function cargarArchivosGH(unidad, semana, forceReload = false) {
+    const slotId = `gh-u${unidad}s${semana}`;
+    const container = document.getElementById(slotId);
+    if (!container) return;
+
+    if (!GH || !GH.owner || !GH.repo) {
+      container.className = '';
+      container.innerHTML = '<span class="gh-no-config">Sin conexión a GitHub configurada</span>';
+      return;
+    }
+
+    // Evitar múltiples cargas simultáneas
+    if (container.getAttribute('data-loading') === 'true' && !forceReload) return;
+    container.setAttribute('data-loading', 'true');
+
+    container.className = 'gh-loading';
+    container.innerHTML = '<span class="gh-mini-spin"></span>Cargando...';
+
+    const relFolder = `unidad${unidad}/semana${semana}`;
+    const fullPath  = ghPath(relFolder);
+    const url = `https://api.github.com/repos/${GH.owner}/${GH.repo}/contents/${fullPath}?ref=${GH.branch || 'main'}`;
+
+    try {
+      const headers = { 'Accept': 'application/vnd.github+json' };
+      if (GH.token) headers['Authorization'] = 'Bearer ' + GH.token;
+      const r = await fetch(url, { headers });
+
+      if (r.status === 404) {
+        container.className = '';
+        container.innerHTML = '<span class="gh-sin-archivos">Sin archivos subidos aún</span>';
+        marcarSemanaCompletada(unidad, semana, false);
+        container.removeAttribute('data-loading');
+        return;
+      }
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+
+      const items = await r.json();
+      const files = items.filter(i => i.type === 'file');
+
+      if (!files.length) {
+        container.className = '';
+        container.innerHTML = '<span class="gh-sin-archivos">Sin archivos subidos aún</span>';
+        marcarSemanaCompletada(unidad, semana, false);
+        container.removeAttribute('data-loading');
+        return;
+      }
+
+      // Hay al menos un archivo → semana completada
+      marcarSemanaCompletada(unidad, semana, true);
+
+      container.className = '';
+      const ul = document.createElement('ul');
+      ul.className = 'gh-archivos-lista';
+      files.forEach(f => {
+        const li = document.createElement('li');
+        li.className = 'gh-archivo-item';
+        li.innerHTML = `
+          <span style="font-size:1.1em">${fileEmoji(f.name)}</span>
+          <span class="gh-archivo-nombre">${f.name}</span>
+          <span class="gh-archivo-size">${fmtSize(f.size)}</span>
+          <a href="${f.download_url}" target="_blank" class="gh-btn-dl">↓ Descargar</a>
+        `;
+        ul.appendChild(li);
+      });
+      container.parentNode.replaceChild(ul, container);
+    } catch(e) {
+      container.className = '';
+      container.innerHTML = `<span style="color:#ff6b6b;font-size:.78em">Error al cargar: ${e.message}</span>`;
+      container.removeAttribute('data-loading');
+    }
+  }
+
+  // Expandir/colapsar semana y cargar archivos si es necesario
+  function toggleSemana(id) {
+    const card = document.getElementById(id);
+    card.classList.toggle('abierta');
+    const match = id.match(/^u(\d)s(\d)$/);
+    if (match) {
+      const unidad = parseInt(match[1]);
+      const semana = parseInt(match[2]);
+      // Si se abre, cargamos los archivos (si no se han cargado aún)
+      if (card.classList.contains('abierta')) {
+        cargarArchivosGH(unidad, semana);
+      }
+    }
+  }
+
+  // Cargar el estado inicial de todas las semanas (para saber progreso)
+  async function cargarEstadoInicial() {
+    if (!GH || !GH.owner || !GH.repo) return;
+    const promesas = [];
+    for (let u = 1; u <= 4; u++) {
+      for (let s = 1; s <= 4; s++) {
+        promesas.push(cargarArchivosGH(u, s, true)); // forceReload para evitar usar caché
+      }
+    }
+    await Promise.all(promesas);
+  }
+
+  // Mostrar unidad (cambiar pestaña)
+  function mostrarUnidad(num, btn) {
+    document.querySelectorAll('.unidad-contenido').forEach(u => u.classList.remove('activo'));
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('unidad-' + num).classList.add('activo');
+    btn.classList.add('active');
+  }
+
+  // Inicialización
+  window.addEventListener('load', async () => {
+    // Cargar configuración desde localStorage
+    try {
+      const raw = localStorage.getItem('gh_cfg');
+      if (raw) GH = JSON.parse(raw);
+    } catch(e) {}
+
+    // Si hay configuración, cargar estado inicial
+    if (GH && GH.owner && GH.repo) {
+      // Mostrar mensaje de carga
+      const heroP = document.querySelector('.hero-unidades p');
+      if (heroP) heroP.innerHTML = 'Cargando progreso desde GitHub...';
+      await cargarEstadoInicial();
+      if (heroP) heroP.innerHTML = 'El progreso se actualiza automáticamente según los archivos subidos a cada semana.';
+    } else {
+      // Sin GitHub, mostrar mensaje y marcar todo como no completado
+      for (let u = 1; u <= 4; u++) {
+        for (let s = 1; s <= 4; s++) {
+          marcarSemanaCompletada(u, s, false);
+          const container = document.getElementById(`gh-u${u}s${s}`);
+          if (container) {
+            container.className = '';
+            container.innerHTML = '<span class="gh-no-config">Configura GitHub en el panel de administración</span>';
+          }
+        }
+      }
+    }
+
+    // Unidad activa por localStorage (desde index.html)
+    const ua = localStorage.getItem('unidadActiva');
+    if (ua && ua >= 1 && ua <= 4) {
+      const tab = document.querySelectorAll('.tab-btn')[ua - 1];
+      if (tab) mostrarUnidad(parseInt(ua), tab);
+      localStorage.removeItem('unidadActiva');
+    }
+  });
+</script>
+
+</body>
+</html>
