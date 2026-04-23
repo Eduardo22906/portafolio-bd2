@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Iniciar Sesión · Base de Datos II</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: 'Lato', Arial, sans-serif;
+      background-color: #0a0e1a;
+      color: white;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Header igual al principal */
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background-color: #0d1b2e;
+      padding: 20px 50px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.7);
+      position: relative;
+      flex-wrap: wrap;
+    }
+
+    header img {
+      width: 160px;
+      height: 80px;
+      object-fit: cover;
+      border-radius: 10px;
+    }
+
+    header h1 {
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      font-family: 'Cinzel', serif;
+      font-size: 2em;
+      color: #00e5ff;
+      margin: 0;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      text-shadow: 0 0 18px rgba(0, 229, 255, 0.6), 3px 3px 8px rgba(0,0,0,0.8);
+      text-align: center;
+    }
+
+    .menu-btn {
+      background: none;
+      border: 1px solid #00e5ff;
+      color: #00e5ff;
+      padding: 8px 16px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.85em;
+      text-transform: uppercase;
+      transition: all 0.3s;
+    }
+
+    .menu-btn:hover {
+      background: #00e5ff;
+      color: #0d1b2e;
+    }
+
+    .menu {
+      position: absolute;
+      top: 90px;
+      right: 50px;
+      background: #0d1b2e;
+      border: 1px solid #00e5ff;
+      border-radius: 8px;
+      display: none;
+      flex-direction: column;
+      min-width: 200px;
+      z-index: 100;
+    }
+
+    .menu a {
+      padding: 12px;
+      text-decoration: none;
+      color: #00e5ff;
+      border-bottom: 1px solid rgba(0, 229, 255, 0.15);
+    }
+
+    .menu a:hover {
+      background: #112240;
+    }
+
+    .menu.show {
+      display: flex;
+    }
+
+    /* Contenedor del login */
+    .login-container {
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 30px 20px;
+    }
+
+    .login-card {
+      background: rgba(13, 27, 46, 0.85);
+      backdrop-filter: blur(8px);
+      border: 1px solid #00e5ff;
+      border-radius: 20px;
+      padding: 40px 35px;
+      width: 100%;
+      max-width: 450px;
+      box-shadow: 0 0 35px rgba(0, 229, 255, 0.2);
+      text-align: center;
+    }
+
+    .login-card h2 {
+      font-family: 'Cinzel', serif;
+      color: #00e5ff;
+      margin-top: 0;
+      margin-bottom: 10px;
+      font-size: 2em;
+      text-shadow: 0 0 10px rgba(0,229,255,0.5);
+    }
+
+    .login-card p.sub {
+      color: #b0c7e9;
+      margin-bottom: 30px;
+      font-size: 0.95em;
+    }
+
+    .input-group {
+      margin-bottom: 25px;
+      text-align: left;
+    }
+
+    .input-group label {
+      display: block;
+      margin-bottom: 8px;
+      color: #00e5ff;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+    }
+
+    .input-group input {
+      width: 100%;
+      padding: 14px 16px;
+      background: #0a101f;
+      border: 1px solid #2a3a55;
+      border-radius: 12px;
+      color: white;
+      font-size: 1rem;
+      transition: all 0.3s;
+      outline: none;
+    }
+
+    .input-group input:focus {
+      border-color: #00e5ff;
+      box-shadow: 0 0 12px rgba(0, 229, 255, 0.3);
+    }
+
+    .input-group input::placeholder {
+      color: #6a7c94;
+      font-style: italic;
+    }
+
+    .login-btn {
+      background: #00e5ff;
+      color: #0d1b2e;
+      border: none;
+      padding: 14px 25px;
+      width: 100%;
+      border-radius: 40px;
+      font-weight: bold;
+      font-size: 1.1em;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      cursor: pointer;
+      transition: all 0.3s;
+      box-shadow: 0 4px 12px rgba(0, 229, 255, 0.3);
+      margin-top: 10px;
+    }
+
+    .login-btn:hover {
+      background: #40f0ff;
+      transform: translateY(-2px);
+      box-shadow: 0 8px 18px rgba(0, 229, 255, 0.5);
+    }
+
+    .error-message {
+      color: #ff6b6b;
+      margin-top: 18px;
+      font-size: 0.95em;
+      min-height: 22px;
+      font-weight: 500;
+    }
+
+    .hint {
+      margin-top: 25px;
+      font-size: 0.85em;
+      color: #8899bb;
+      border-top: 1px dashed #2a3a55;
+      padding-top: 20px;
+    }
+
+    .hint span {
+      color: #00e5ff;
+      font-weight: bold;
+    }
+
+    footer {
+      background-color: #0d1b2e;
+      text-align: center;
+      padding: 18px;
+      color: #00e5ff;
+      font-size: 0.9em;
+    }
+
+    @media (max-width: 1024px) {
+      header h1 {
+        position: static;
+        transform: none;
+        margin: 10px 0;
+        width: 100%;
+        text-align: center;
+      }
+      header {
+        justify-content: center;
+      }
+    }
+
+    @media (max-width: 600px) {
+      .login-card {
+        padding: 30px 20px;
+      }
+      header img {
+        width: 130px;
+        height: 65px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+<header>
+  <img src="lgUpla.png" alt="Logo UPLA">
+  <h1>Acceso Administrativo</h1>
+  <button class="menu-btn" onclick="toggleMenu()">☰ Menú</button>
+
+  <div id="menu" class="menu">
+    <a href="index.html">Inicio</a>
+    <a href="sobreMi.html">Sobre mí</a>
+    <a href="unidades.html">Unidades</a>
+    <a href="login.html">Iniciar sesión</a>
+  </div>
+</header>
+
+<div class="login-container">
+  <div class="login-card">
+    <h2>🔐 Iniciar Sesión</h2>
+    <p class="sub">Panel exclusivo para administradores</p>
+    
+    <form id="loginForm" onsubmit="return false;">
+      <div class="input-group">
+        <label>📧 Correo institucional</label>
+        <input type="email" id="email" placeholder="admin@ms.upla.edu.pe" value="" required>
+      </div>
+      <div class="input-group">
+        <label>🔑 Contraseña</label>
+        <input type="password" id="password" placeholder="··········" required>
+      </div>
+      
+      <button type="submit" class="login-btn" onclick="validarLogin()">Ingresar</button>
+      <div id="errorMsg" class="error-message"></div>
+    </form>
+    
+    <div class="hint">
+      <span>Demo:</span> admin@ms.upla.edu.pe / 123
+    </div>
+  </div>
+</div>
+
+<footer>
+  © 2026 Universidad Peruana Los Andes · Base de Datos II
+</footer>
+
+<script>
+  function toggleMenu() {
+    document.getElementById("menu").classList.toggle("show");
+  }
+
+  // Cerrar menú al hacer clic fuera (opcional)
+  window.addEventListener('click', function(e) {
+    const menu = document.getElementById('menu');
+    const btn = document.querySelector('.menu-btn');
+    if (!menu.contains(e.target) && !btn.contains(e.target)) {
+      menu.classList.remove('show');
+    }
+  });
+
+  function validarLogin() {
+    const email = document.getElementById('email').value.trim();
+    const password = document.getElementById('password').value;
+    const errorDiv = document.getElementById('errorMsg');
+
+    // Credenciales predefinidas
+    const EMAIL_VALIDO = "admin@ms.upla.edu.pe";
+    const PASSWORD_VALIDO = "123";
+
+    if (email === EMAIL_VALIDO && password === PASSWORD_VALIDO) {
+      errorDiv.style.color = "#00e5ff";
+      errorDiv.textContent = "✅ Acceso correcto. Redirigiendo...";
+      // Redirigir a admin.html después de un breve delay
+      setTimeout(() => {
+        window.location.href = "admin.html";
+      }, 800);
+    } else {
+      errorDiv.style.color = "#ff6b6b";
+      if (email !== EMAIL_VALIDO) {
+        errorDiv.textContent = "❌ Correo institucional no válido.";
+      } else if (password !== PASSWORD_VALIDO) {
+        errorDiv.textContent = "❌ Contraseña incorrecta.";
+      } else {
+        errorDiv.textContent = "❌ Credenciales inválidas.";
+      }
+    }
+  }
+
+  // Permitir envío con Enter
+  document.getElementById('password').addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      validarLogin();
+    }
+  });
+  document.getElementById('email').addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      validarLogin();
+    }
+  });
+</script>
+
+</body>
+</html>
