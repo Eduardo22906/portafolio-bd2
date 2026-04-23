@@ -1,0 +1,729 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin · Gestión de Unidades</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+    body {
+      margin: 0; font-family: 'Lato', Arial, sans-serif;
+      background-color: #0a0e1a; color: white;
+      min-height: 100vh; display: flex; flex-direction: column;
+    }
+
+    /* ── HEADER ── */
+    header {
+      display: flex; align-items: center; justify-content: space-between;
+      background-color: #0d1b2e; padding: 20px 50px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.7); position: relative; flex-wrap: wrap;
+    }
+    header img { width: 160px; height: 80px; object-fit: cover; border-radius: 10px; }
+    header h1 {
+      position: absolute; left: 50%; transform: translateX(-50%);
+      font-family: 'Cinzel', serif; font-size: 2em; color: #00e5ff; margin: 0;
+      letter-spacing: 2px; text-transform: uppercase;
+      text-shadow: 0 0 18px rgba(0,229,255,0.6), 3px 3px 8px rgba(0,0,0,0.8); text-align: center;
+    }
+    .header-right { display: flex; gap: 10px; align-items: center; }
+    .logout-btn {
+      background: none; border: 1px solid #ff7b7b; color: #ff7b7b;
+      padding: 8px 16px; border-radius: 6px; cursor: pointer;
+      font-size: 0.85em; text-transform: uppercase; transition: all 0.3s;
+      display: flex; align-items: center; gap: 6px; font-family: 'Lato', sans-serif;
+    }
+    .logout-btn:hover { background: #ff7b7b; color: #0d1b2e; }
+    .gh-status-pill {
+      display: flex; align-items: center; gap: 7px;
+      padding: 6px 14px; border-radius: 20px; font-size: 0.78em; font-weight: 700;
+      letter-spacing: 0.5px; border: 1px solid; cursor: pointer; transition: all 0.2s;
+    }
+    .gh-status-pill.disconnected { border-color: rgba(255,183,0,.4); color: #ffb700; background: rgba(255,183,0,.08); }
+    .gh-status-pill.connected    { border-color: rgba(0,229,160,.4); color: #00e5a0; background: rgba(0,229,160,.08); }
+    .gh-dot { width: 7px; height: 7px; border-radius: 50%; }
+    .gh-dot.off { background: #ffb700; }
+    .gh-dot.on  { background: #00e5a0; animation: pulse 1.8s infinite; }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+
+    /* ── MODAL GITHUB CONFIG ── */
+    .modal-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,.75);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 200; opacity: 0; pointer-events: none; transition: opacity .25s;
+    }
+    .modal-overlay.show { opacity: 1; pointer-events: all; }
+    .modal-box {
+      background: #0d1b2e; border: 1px solid rgba(0,229,255,.4);
+      border-radius: 20px; padding: 35px 30px; width: 100%; max-width: 480px;
+      box-shadow: 0 0 50px rgba(0,229,255,.15);
+      transform: translateY(20px); transition: transform .25s;
+    }
+    .modal-overlay.show .modal-box { transform: translateY(0); }
+    .modal-box h3 {
+      font-family: 'Cinzel', serif; color: #00e5ff; font-size: 1.5em;
+      margin: 0 0 6px; text-align: center;
+    }
+    .modal-box .modal-sub { text-align: center; color: #7a9bb8; font-size: .85em; margin-bottom: 24px; }
+    .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .field { display: flex; flex-direction: column; gap: 5px; margin-bottom: 14px; }
+    .field label { font-size: .78em; color: #00e5ff; letter-spacing: .8px; text-transform: uppercase; }
+    .field input {
+      background: #0a101f; border: 1px solid #1e3050; color: white;
+      padding: 10px 12px; border-radius: 10px; font-size: .9em;
+      font-family: 'Lato', sans-serif; outline: none; transition: border-color .2s;
+    }
+    .field input:focus { border-color: #00e5ff; box-shadow: 0 0 10px rgba(0,229,255,.2); }
+    .field input::placeholder { color: #3a5272; }
+    .modal-actions { display: flex; gap: 10px; justify-content: center; margin-top: 8px; }
+    .btn-cyan {
+      background: #00e5ff; color: #0a0e1a; border: none; padding: 11px 28px;
+      border-radius: 30px; font-weight: 700; font-size: .88em; letter-spacing: .5px;
+      text-transform: uppercase; cursor: pointer; transition: all .2s;
+      font-family: 'Lato', sans-serif;
+    }
+    .btn-cyan:hover { background: #40f0ff; transform: translateY(-2px); }
+    .btn-ghost {
+      background: none; border: 1px solid rgba(255,255,255,.2); color: #aaa;
+      padding: 11px 22px; border-radius: 30px; font-size: .88em; cursor: pointer;
+      transition: all .2s; font-family: 'Lato', sans-serif; letter-spacing: .5px; text-transform: uppercase;
+    }
+    .btn-ghost:hover { border-color: rgba(255,255,255,.5); color: white; }
+    .hint-token {
+      background: rgba(0,229,255,.06); border: 1px dashed rgba(0,229,255,.25);
+      border-radius: 10px; padding: 12px 15px; font-size: .8em; color: #7a9bb8;
+      margin-bottom: 16px; line-height: 1.6;
+    }
+    .hint-token a { color: #00e5ff; text-decoration: none; }
+    .hint-token a:hover { text-decoration: underline; }
+
+    /* ── MAIN WRAPPER ── */
+    .admin-wrapper { flex: 1; padding: 35px 30px; max-width: 1500px; margin: 0 auto; width: 100%; }
+    .page-title { font-family: 'Cinzel', serif; color: #00e5ff; text-align: center; margin-bottom: 6px; font-size: 2.2em; }
+    .subtitulo-admin { text-align: center; color: #7a9bb8; margin-bottom: 28px; font-size: .9em; }
+
+    /* Banner estado */
+    .banner {
+      border-radius: 14px; padding: 16px 22px;
+      margin-bottom: 28px; display: flex; align-items: center; gap: 12px;
+      font-size: .88em;
+    }
+    .banner.warning { background: rgba(255,183,0,.08); border: 1px solid rgba(255,183,0,.3); color: #f5d06a; }
+    .banner.success { background: rgba(0,229,160,.08); border: 1px solid rgba(0,229,160,.3); color: #7fffd4; }
+    .banner.loading { background: rgba(0,229,255,.07); border: 1px solid rgba(0,229,255,.25); color: #a0d8ef; }
+    .banner .spinner { width:16px;height:16px;border:2px solid rgba(0,229,255,.3);border-top-color:#00e5ff;border-radius:50%;animation:spin .7s linear infinite;flex-shrink:0; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .banner-btn {
+      margin-left: auto; background: none; border: 1px solid currentColor;
+      color: inherit; padding: 6px 14px; border-radius: 20px; font-size: .8em;
+      cursor: pointer; transition: all .2s; white-space: nowrap; font-family: 'Lato', sans-serif;
+    }
+    .banner-btn:hover { background: rgba(255,255,255,.1); }
+
+    /* ── UNIDADES GRID ── */
+    .unidades-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 22px; }
+    .unidad-card {
+      background: rgba(13,27,46,.8); backdrop-filter: blur(4px);
+      border: 1px solid rgba(0,229,255,.3); border-radius: 20px; padding: 20px 16px;
+      box-shadow: 0 0 20px rgba(0,229,255,.07);
+    }
+    .unidad-titulo {
+      font-family: 'Cinzel', serif; color: #00e5ff; font-size: 1.35em;
+      text-align: center; margin-bottom: 18px;
+      border-bottom: 1px dashed #1e3a5a; padding-bottom: 10px;
+    }
+    .semana-item {
+      margin-bottom: 18px; background: #0c1625;
+      border-radius: 14px; padding: 13px 12px;
+      border: 1px solid rgba(255,255,255,.04);
+    }
+    .semana-header {
+      font-weight: 700; color: #80b4e0; margin-bottom: 8px;
+      display: flex; align-items: center; justify-content: space-between; font-size: .85em;
+    }
+    .semana-label { display: flex; align-items: center; gap: 7px; }
+
+    /* ── FILE LIST ── */
+    .file-list { list-style: none; padding: 0; margin: 0 0 8px; }
+    .file-item {
+      background: #111d2e; padding: 7px 10px; border-radius: 8px;
+      margin-bottom: 5px; display: flex; align-items: center;
+      gap: 8px; font-size: .8em; border: 1px solid rgba(255,255,255,.05);
+      transition: border-color .2s;
+    }
+    .file-item:hover { border-color: rgba(0,229,255,.25); }
+    .file-name { flex: 1; word-break: break-all; color: #c8ddf0; }
+    .file-size { color: #4a6a8a; font-size: .75em; white-space: nowrap; }
+    .file-actions { display: flex; gap: 4px; flex-shrink: 0; }
+    .icon-action {
+      width: 24px; height: 24px; border-radius: 6px; border: none;
+      cursor: pointer; font-size: 11px; display: flex; align-items: center;
+      justify-content: center; transition: all .15s; background: transparent;
+    }
+    .icon-action.dl { color: #00e5ff; }
+    .icon-action.dl:hover { background: rgba(0,229,255,.15); }
+    .icon-action.del { color: #ff6b6b; }
+    .icon-action.del:hover { background: rgba(255,107,107,.15); }
+    .icon-action.edit { color: #ffb700; }
+    .icon-action.edit:hover { background: rgba(255,183,0,.15); }
+
+    .empty-msg { color: #3a5a7a; font-size: .78em; padding: 6px 4px; font-style: italic; }
+    .loading-files { color: #3a6080; font-size: .78em; display: flex; align-items: center; gap: 6px; padding: 4px; }
+    .mini-spin { width:11px;height:11px;border:1.5px solid rgba(0,229,255,.3);border-top-color:#00e5ff;border-radius:50%;animation:spin .7s linear infinite; }
+
+    /* ── UPLOAD AREA ── */
+    .upload-area { margin-top: 6px; }
+    .upload-trigger {
+      width: 100%; padding: 7px 0;
+      background: rgba(0,229,255,.05); border: 1px dashed rgba(0,229,255,.3);
+      color: #00e5ff; border-radius: 8px; font-size: .78em; font-weight: 700;
+      letter-spacing: .5px; cursor: pointer; transition: all .2s; text-align: center;
+      font-family: 'Lato', sans-serif;
+    }
+    .upload-trigger:hover { background: rgba(0,229,255,.12); border-color: #00e5ff; }
+    .upload-trigger:disabled { opacity: .35; cursor: not-allowed; }
+
+    /* ── RENAME MODAL ── */
+    #rename-modal .modal-box { max-width: 380px; }
+
+    /* ── DELETE CONFIRM MODAL ── */
+    #delete-modal .modal-box { max-width: 380px; }
+    .delete-name { color: #f0e0a0; font-weight: 700; word-break: break-all; }
+
+    /* ── TOAST ── */
+    #toast {
+      position: fixed; bottom: 28px; right: 28px; z-index: 999;
+      padding: 12px 20px; border-radius: 12px; font-size: .88em; font-weight: 700;
+      pointer-events: none; opacity: 0; transition: opacity .25s;
+      max-width: 320px; line-height: 1.4;
+    }
+    #toast.show { opacity: 1; }
+    #toast.ok  { background: #001a0e; color: #00e5a0; border: 1px solid rgba(0,229,160,.4); }
+    #toast.err { background: #1a0008; color: #ff6b6b; border: 1px solid rgba(255,107,107,.4); }
+    #toast.info{ background: #001525; color: #a0d8ef; border: 1px solid rgba(0,229,255,.3); }
+
+    /* ── FOOTER ACTIONS ── */
+    .admin-footer { display: flex; justify-content: center; gap: 16px; margin: 36px 0 20px; flex-wrap: wrap; }
+    .btn { padding:11px 26px; border-radius:40px; font-weight:700; text-transform:uppercase; letter-spacing:1px; cursor:pointer; transition:.2s; text-decoration:none; display:inline-block; border:none; font-family:'Lato',sans-serif; font-size:.88em; }
+    .btn-primary { background:#00e5ff; color:#0d1b2e; }
+    .btn-primary:hover { background:#40f0ff; }
+    .btn-secondary { background:none; border:1px solid #00e5ff; color:#00e5ff; }
+    .btn-secondary:hover { background:rgba(0,229,255,.1); }
+
+    footer { background-color:#0d1b2e; text-align:center; padding:18px; color:#00e5ff; font-size:.9em; }
+
+    @media(max-width:1200px){ .unidades-grid{ grid-template-columns:repeat(2,1fr); } }
+    @media(max-width:700px){
+      .unidades-grid{ grid-template-columns:1fr; }
+      header h1{ position:static; transform:none; margin:10px 0; width:100%; text-align:center; }
+      header{ justify-content:center; }
+      .field-row{ grid-template-columns:1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════
+     HEADER
+═══════════════════════════════════════════════ -->
+<header>
+  <img src="lgUpla.png" alt="Logo UPLA">
+  <h1>Panel Administrador</h1>
+  <div class="header-right">
+    <div class="gh-status-pill disconnected" id="gh-pill" onclick="openGhModal()" title="Configurar GitHub">
+      <span class="gh-dot off" id="gh-dot"></span>
+      <span id="gh-pill-text">GitHub: Sin conectar</span>
+    </div>
+    <button class="logout-btn" onclick="cerrarSesion()">
+      <span style="font-size:1.1em">🚪</span> Cerrar sesión
+    </button>
+  </div>
+</header>
+
+<!-- ═══════════════════════════════════════════════
+     MODAL: CONFIGURACIÓN GITHUB
+═══════════════════════════════════════════════ -->
+<div class="modal-overlay" id="gh-modal">
+  <div class="modal-box">
+    <h3>⚙ Configuración GitHub</h3>
+    <p class="modal-sub">Credenciales para gestionar archivos del portafolio</p>
+
+    <div class="hint-token">
+      🔑 Necesitas un <strong>Personal Access Token</strong> con permiso <code>repo</code>.<br>
+      <a href="https://github.com/settings/tokens/new" target="_blank">Crear token en GitHub →</a>
+    </div>
+
+    <div class="field-row">
+      <div class="field">
+        <label>Usuario / Org</label>
+        <input type="text" id="gh-owner" placeholder="tu-usuario">
+      </div>
+      <div class="field">
+        <label>Repositorio</label>
+        <input type="text" id="gh-repo" placeholder="portafolio-bd2">
+      </div>
+    </div>
+    <div class="field-row">
+      <div class="field">
+        <label>Rama</label>
+        <input type="text" id="gh-branch" value="main">
+      </div>
+      <div class="field">
+        <label>Carpeta raíz (opcional)</label>
+        <input type="text" id="gh-root" placeholder="archivos/">
+      </div>
+    </div>
+    <div class="field">
+      <label>Personal Access Token</label>
+      <input type="password" id="gh-token" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx">
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn-ghost" onclick="closeGhModal()">Cancelar</button>
+      <button class="btn-cyan" onclick="saveGhConfig()" id="gh-save-btn">
+        <span id="gh-save-spinner"></span> Conectar
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════
+     MODAL: RENOMBRAR / REEMPLAZAR
+═══════════════════════════════════════════════ -->
+<div class="modal-overlay" id="rename-modal">
+  <div class="modal-box">
+    <h3 style="font-size:1.2em">✏ Reemplazar archivo</h3>
+    <p class="modal-sub" id="rename-sub">Sube un nuevo archivo para reemplazar el existente</p>
+    <div class="field">
+      <label>Nuevo archivo</label>
+      <input type="file" id="rename-file-input" style="background:#0a101f;border:1px solid #1e3050;color:white;padding:8px;border-radius:10px;width:100%;font-family:'Lato',sans-serif;font-size:.85em;cursor:pointer;">
+    </div>
+    <div class="modal-actions">
+      <button class="btn-ghost" onclick="closeRenameModal()">Cancelar</button>
+      <button class="btn-cyan" onclick="doReplace()" id="replace-btn">Reemplazar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════
+     MODAL: CONFIRMAR ELIMINAR
+═══════════════════════════════════════════════ -->
+<div class="modal-overlay" id="delete-modal">
+  <div class="modal-box">
+    <h3 style="font-size:1.2em;color:#ff6b6b">⚠ Eliminar archivo</h3>
+    <p style="color:#a0b4c8;font-size:.9em;margin:14px 0 22px;line-height:1.6">
+      ¿Confirmas eliminar <span class="delete-name" id="delete-name-label"></span>?<br>
+      <span style="font-size:.85em;color:#5a7a9a">Esta acción no se puede deshacer.</span>
+    </p>
+    <div class="modal-actions">
+      <button class="btn-ghost" onclick="closeDeleteModal()">Cancelar</button>
+      <button class="btn-cyan" style="background:#ff6b6b;color:#0a0e1a" onclick="doDelete()" id="del-confirm-btn">Eliminar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════
+     MAIN CONTENT
+═══════════════════════════════════════════════ -->
+<div class="admin-wrapper">
+  <h2 class="page-title">⚙️ Gestión de Unidades y Semanas</h2>
+  <p class="subtitulo-admin">Administra los archivos de cada semana directamente desde GitHub</p>
+
+  <div id="banner-zone"></div>
+
+  <div id="unidadesContainer" class="unidades-grid"></div>
+
+  <div class="admin-footer">
+    <button class="btn btn-primary" onclick="location.href='unidades.html'">👁 Ver sitio público</button>
+    <button class="btn btn-secondary" onclick="recargarTodo()">🔄 Recargar archivos</button>
+    <button class="btn btn-secondary" onclick="openGhModal()">⚙ Config GitHub</button>
+  </div>
+</div>
+
+<footer>© 2026 Universidad Peruana Los Andes · Base de Datos II</footer>
+
+<!-- toast -->
+<div id="toast"></div>
+
+<!-- ═══════════════════════════════════════════════
+     SCRIPT PRINCIPAL
+═══════════════════════════════════════════════ -->
+<script>
+/* ── ESTADO ───────────────────────────────── */
+let GH = { owner:'', repo:'', branch:'main', root:'', token:'' };
+let ghConnected = false;
+
+// Contexto para replace/delete
+let replaceCtx  = { path:'', sha:'', listId:'' };
+let deleteCtx   = { path:'', sha:'', name:'', listId:'' };
+
+const UNIDADES = [
+  { num:1, nombre:'Fundamentos',    temas:'Modelo ER, Normalización' },
+  { num:2, nombre:'SQL Avanzado',   temas:'Joins, Subconsultas' },
+  { num:3, nombre:'PL/SQL',         temas:'Procedimientos, Triggers' },
+  { num:4, nombre:'Administración', temas:'Seguridad, Proyecto' },
+];
+const SEMANAS = [1, 2, 3, 4];
+
+/* ── PERSISTENCIA ─────────────────────────── */
+function saveConfig() {
+  localStorage.setItem('gh_cfg', JSON.stringify(GH));
+}
+function loadConfig() {
+  const s = localStorage.getItem('gh_cfg');
+  if (s) try { GH = JSON.parse(s); } catch(e) {}
+}
+
+/* ── GITHUB API ───────────────────────────── */
+function ghHeaders() {
+  const h = { 'Accept':'application/vnd.github+json', 'X-GitHub-Api-Version':'2022-11-28' };
+  if (GH.token) h['Authorization'] = 'Bearer ' + GH.token;
+  return h;
+}
+function ghPath(relPath) {
+  const root = GH.root ? GH.root.replace(/\/$/, '') : '';
+  return root ? (root + '/' + relPath) : relPath;
+}
+async function ghList(relPath) {
+  const url = `https://api.github.com/repos/${GH.owner}/${GH.repo}/contents/${ghPath(relPath)}?ref=${GH.branch}`;
+  const r = await fetch(url, { headers: ghHeaders() });
+  if (r.status === 404) return [];
+  if (!r.ok) throw new Error('HTTP ' + r.status);
+  return r.json();
+}
+async function ghUpload(relPath, fileObj, existingSha) {
+  const b64 = await toBase64(fileObj);
+  const body = {
+    message: (existingSha ? 'Actualizar: ' : 'Subir: ') + fileObj.name,
+    content: b64, branch: GH.branch
+  };
+  if (existingSha) body.sha = existingSha;
+  const url = `https://api.github.com/repos/${GH.owner}/${GH.repo}/contents/${ghPath(relPath)}`;
+  const r = await fetch(url, { method:'PUT', headers: ghHeaders(), body: JSON.stringify(body) });
+  if (!r.ok) { const e = await r.json(); throw new Error(e.message || 'Error subiendo'); }
+  return r.json();
+}
+async function ghDelete(fullPath, sha, name) {
+  const url = `https://api.github.com/repos/${GH.owner}/${GH.repo}/contents/${fullPath}`;
+  const r = await fetch(url, {
+    method: 'DELETE', headers: ghHeaders(),
+    body: JSON.stringify({ message: 'Eliminar: ' + name, sha, branch: GH.branch })
+  });
+  if (!r.ok) { const e = await r.json(); throw new Error(e.message || 'Error eliminando'); }
+}
+function toBase64(file) {
+  return new Promise((res, rej) => {
+    const reader = new FileReader();
+    reader.onload = () => res(reader.result.split(',')[1]);
+    reader.onerror = rej;
+    reader.readAsDataURL(file);
+  });
+}
+
+/* ── MODAL GITHUB CONFIG ──────────────────── */
+function openGhModal() {
+  document.getElementById('gh-owner').value  = GH.owner;
+  document.getElementById('gh-repo').value   = GH.repo;
+  document.getElementById('gh-branch').value = GH.branch || 'main';
+  document.getElementById('gh-root').value   = GH.root;
+  document.getElementById('gh-token').value  = GH.token;
+  document.getElementById('gh-modal').classList.add('show');
+}
+function closeGhModal() {
+  document.getElementById('gh-modal').classList.remove('show');
+}
+async function saveGhConfig() {
+  const owner = document.getElementById('gh-owner').value.trim();
+  const repo  = document.getElementById('gh-repo').value.trim();
+  const token = document.getElementById('gh-token').value.trim();
+  if (!owner || !repo || !token) { toast('Completa usuario, repo y token', 'err'); return; }
+
+  GH.owner  = owner;
+  GH.repo   = repo;
+  GH.branch = document.getElementById('gh-branch').value.trim() || 'main';
+  GH.root   = document.getElementById('gh-root').value.trim().replace(/\/$/, '');
+  GH.token  = token;
+
+  const btn = document.getElementById('gh-save-btn');
+  btn.disabled = true;
+  document.getElementById('gh-save-spinner').innerHTML = '<span style="display:inline-block;width:12px;height:12px;border:2px solid rgba(0,0,0,.3);border-top-color:#0a0e1a;border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle;margin-right:5px"></span>';
+
+  try {
+    const r = await fetch(
+      `https://api.github.com/repos/${GH.owner}/${GH.repo}`,
+      { headers: ghHeaders() }
+    );
+    if (!r.ok) throw new Error('Repo no encontrado o token inválido');
+    saveConfig();
+    ghConnected = true;
+    updatePill();
+    closeGhModal();
+    toast('✓ Conectado a ' + GH.owner + '/' + GH.repo, 'ok');
+    cargarTodosLosArchivos();
+  } catch(e) {
+    toast('❌ ' + e.message, 'err');
+  } finally {
+    btn.disabled = false;
+    document.getElementById('gh-save-spinner').innerHTML = '';
+  }
+}
+function updatePill() {
+  const pill = document.getElementById('gh-pill');
+  const dot  = document.getElementById('gh-dot');
+  const txt  = document.getElementById('gh-pill-text');
+  if (ghConnected) {
+    pill.className = 'gh-status-pill connected';
+    dot.className  = 'gh-dot on';
+    txt.textContent = GH.owner + '/' + GH.repo;
+  } else {
+    pill.className = 'gh-status-pill disconnected';
+    dot.className  = 'gh-dot off';
+    txt.textContent = 'GitHub: Sin conectar';
+  }
+}
+
+/* ── BANNER ───────────────────────────────── */
+function setBanner(type, html) {
+  document.getElementById('banner-zone').innerHTML =
+    `<div class="banner ${type}">${html}</div>`;
+}
+function clearBanner() { document.getElementById('banner-zone').innerHTML = ''; }
+
+/* ── RENDER ESTRUCTURA ────────────────────── */
+function renderEstructura() {
+  const container = document.getElementById('unidadesContainer');
+  container.innerHTML = '';
+  UNIDADES.forEach(u => {
+    const card = document.createElement('div');
+    card.className = 'unidad-card';
+    card.innerHTML = `<div class="unidad-titulo">UNIDAD ${u.num}<br><span style="font-size:.55em;color:#4a7a9a;font-family:'Lato',sans-serif;font-weight:400">${u.nombre}</span></div>`;
+    SEMANAS.forEach(s => {
+      const id = `list-u${u.num}-s${s}`;
+      const div = document.createElement('div');
+      div.className = 'semana-item';
+      div.innerHTML = `
+        <div class="semana-header">
+          <span class="semana-label">📅 Semana ${s}</span>
+          <span id="count-${id}" style="font-size:.7em;color:#3a5a7a"></span>
+        </div>
+        <ul class="file-list" id="${id}">
+          <li class="loading-files"><span class="mini-spin"></span> Cargando…</li>
+        </ul>
+        <div class="upload-area">
+          <input type="file" id="inp-${id}" multiple style="display:none"
+            onchange="handleUpload(this,'unidad${u.num}/semana${s}','${id}')">
+          <button class="upload-trigger" id="btn-${id}"
+            onclick="document.getElementById('inp-${id}').click()"
+            ${ghConnected ? '' : 'disabled'}>
+            ${ghConnected ? '+ Subir archivos' : '⚙ Configura GitHub primero'}
+          </button>
+        </div>`;
+      card.appendChild(div);
+    });
+    container.appendChild(card);
+  });
+}
+
+/* ── CARGAR ARCHIVOS ──────────────────────── */
+async function cargarArchivos(relFolder, listId) {
+  const ul = document.getElementById(listId);
+  if (!ul) return;
+  ul.innerHTML = `<li class="loading-files"><span class="mini-spin"></span> Cargando…</li>`;
+  try {
+    const items = await ghList(relFolder);
+    const files = items.filter(i => i.type === 'file');
+    document.getElementById('count-' + listId).textContent =
+      files.length ? files.length + ' archivo' + (files.length > 1 ? 's' : '') : '';
+    if (!files.length) {
+      ul.innerHTML = `<li class="empty-msg">Sin archivos subidos</li>`; return;
+    }
+    ul.innerHTML = '';
+    files.forEach(f => {
+      const li = document.createElement('li');
+      li.className = 'file-item';
+      li.id = 'fi-' + f.sha.slice(0, 8);
+      li.innerHTML = `
+        <span style="font-size:1.1em">${fileEmoji(f.name)}</span>
+        <span class="file-name">${f.name}</span>
+        <span class="file-size">${fmtSize(f.size)}</span>
+        <span class="file-actions">
+          <a href="${f.download_url}" target="_blank" class="icon-action dl" title="Descargar">↓</a>
+          <button class="icon-action edit" title="Reemplazar archivo"
+            onclick="openReplace('${f.path}','${f.sha}','${f.name}','${listId}')">✎</button>
+          <button class="icon-action del" title="Eliminar"
+            onclick="openDelete('${f.path}','${f.sha}','${f.name}','${listId}')">✕</button>
+        </span>`;
+      ul.appendChild(li);
+    });
+  } catch(e) {
+    ul.innerHTML = `<li style="color:#ff7b7b;font-size:.78em;padding:4px">Error: ${e.message}</li>`;
+  }
+}
+
+function cargarTodosLosArchivos() {
+  habilitarBotones(true);
+  UNIDADES.forEach(u => {
+    SEMANAS.forEach(s => {
+      cargarArchivos(`unidad${u.num}/semana${s}`, `list-u${u.num}-s${s}`);
+    });
+  });
+  clearBanner();
+}
+function recargarTodo() {
+  if (!ghConnected) { toast('Conecta GitHub primero', 'err'); return; }
+  toast('Recargando archivos…', 'info');
+  cargarTodosLosArchivos();
+}
+function habilitarBotones(on) {
+  UNIDADES.forEach(u => SEMANAS.forEach(s => {
+    const id = `list-u${u.num}-s${s}`;
+    const btn = document.getElementById('btn-' + id);
+    if (!btn) return;
+    btn.disabled = !on;
+    btn.textContent = on ? '+ Subir archivos' : '⚙ Configura GitHub primero';
+  }));
+}
+
+/* ── SUBIDA ───────────────────────────────── */
+async function handleUpload(input, relFolder, listId) {
+  const files = Array.from(input.files);
+  if (!files.length) return;
+  const btn = document.getElementById('btn-' + listId);
+  btn.disabled = true; btn.textContent = 'Subiendo…';
+  let ok = 0, fail = 0;
+  for (const file of files) {
+    const relPath = relFolder + '/' + file.name;
+    try {
+      // check if exists to get SHA
+      let existingSha = null;
+      try {
+        const check = await fetch(
+          `https://api.github.com/repos/${GH.owner}/${GH.repo}/contents/${ghPath(relPath)}?ref=${GH.branch}`,
+          { headers: ghHeaders() }
+        );
+        if (check.ok) { const d = await check.json(); existingSha = d.sha; }
+      } catch(e) {}
+      await ghUpload(relPath, file, existingSha);
+      ok++;
+    } catch(e) { fail++; console.error(e); }
+  }
+  input.value = '';
+  btn.disabled = false; btn.textContent = '+ Subir archivos';
+  if (ok) toast(`✓ ${ok} archivo(s) subido(s)`, 'ok');
+  if (fail) toast(`❌ ${fail} archivo(s) fallaron`, 'err');
+  await cargarArchivos(relFolder, listId);
+}
+
+/* ── REEMPLAZAR ───────────────────────────── */
+function openReplace(path, sha, name, listId) {
+  replaceCtx = { path, sha, name, listId };
+  document.getElementById('rename-sub').textContent = `Reemplazando: ${name}`;
+  document.getElementById('rename-file-input').value = '';
+  document.getElementById('rename-modal').classList.add('show');
+}
+function closeRenameModal() { document.getElementById('rename-modal').classList.remove('show'); }
+async function doReplace() {
+  const fileInput = document.getElementById('rename-file-input');
+  if (!fileInput.files.length) { toast('Selecciona un archivo', 'err'); return; }
+  const file = fileInput.files[0];
+  const btn = document.getElementById('replace-btn');
+  btn.disabled = true; btn.textContent = 'Reemplazando…';
+  try {
+    // Build new path with new filename in same folder
+    const folder = replaceCtx.path.includes('/') ?
+      replaceCtx.path.substring(0, replaceCtx.path.lastIndexOf('/')) : '';
+    // If same filename → use old SHA; else create new (old stays, user can delete)
+    const sameName = file.name === replaceCtx.name;
+    const relToRoot = (folder + '/' + file.name).replace(/^\//, '');
+    // Strip GH.root prefix to get relPath
+    const rootPrefix = GH.root ? GH.root + '/' : '';
+    const relPath = relToRoot.startsWith(rootPrefix) ?
+      relToRoot.slice(rootPrefix.length) : relToRoot;
+    await ghUpload(relPath, file, sameName ? replaceCtx.sha : null);
+    toast('✓ Archivo reemplazado', 'ok');
+    closeRenameModal();
+    // Reload the corresponding semana list
+    await cargarArchivos(
+      relPath.substring(0, relPath.lastIndexOf('/')),
+      replaceCtx.listId
+    );
+  } catch(e) { toast('❌ ' + e.message, 'err'); }
+  btn.disabled = false; btn.textContent = 'Reemplazar';
+}
+
+/* ── ELIMINAR ─────────────────────────────── */
+function openDelete(path, sha, name, listId) {
+  deleteCtx = { path, sha, name, listId };
+  document.getElementById('delete-name-label').textContent = name;
+  document.getElementById('delete-modal').classList.add('show');
+}
+function closeDeleteModal() { document.getElementById('delete-modal').classList.remove('show'); }
+async function doDelete() {
+  const btn = document.getElementById('del-confirm-btn');
+  btn.disabled = true; btn.textContent = 'Eliminando…';
+  try {
+    await ghDelete(deleteCtx.path, deleteCtx.sha, deleteCtx.name);
+    toast('✓ ' + deleteCtx.name + ' eliminado', 'ok');
+    closeDeleteModal();
+    // Recalculate folder
+    const folder = deleteCtx.path.includes('/') ?
+      deleteCtx.path.substring(0, deleteCtx.path.lastIndexOf('/')) : '';
+    const rootPrefix = GH.root ? GH.root + '/' : '';
+    const relFolder = folder.startsWith(rootPrefix) ? folder.slice(rootPrefix.length) : folder;
+    await cargarArchivos(relFolder, deleteCtx.listId);
+  } catch(e) { toast('❌ ' + e.message, 'err'); }
+  btn.disabled = false; btn.textContent = 'Eliminar';
+}
+
+/* ── HELPERS ──────────────────────────────── */
+function fileEmoji(name) {
+  const ext = name.split('.').pop().toLowerCase();
+  const m = {pdf:'📄',png:'🖼',jpg:'🖼',jpeg:'🖼',gif:'🖼',mp4:'🎬',mp3:'🎵',
+             zip:'🗜',rar:'🗜',doc:'📝',docx:'📝',xls:'📊',xlsx:'📊',
+             ppt:'📋',pptx:'📋',txt:'📃',js:'💻',html:'💻',css:'💻',py:'💻',sql:'🗄',json:'⚙'};
+  return m[ext] || '📎';
+}
+function fmtSize(b) {
+  if (!b) return '';
+  if (b < 1024) return b + ' B';
+  if (b < 1048576) return Math.round(b/1024) + ' KB';
+  return (b/1048576).toFixed(1) + ' MB';
+}
+
+let toastTimer;
+function toast(msg, type='ok') {
+  const t = document.getElementById('toast');
+  t.className = 'toast show ' + type;
+  t.textContent = msg;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.className = 'toast', 3500);
+}
+
+function cerrarSesion() { window.location.href = 'index.html'; }
+
+/* ── INIT ─────────────────────────────────── */
+window.addEventListener('load', () => {
+  loadConfig();
+  renderEstructura();
+
+  if (GH.owner && GH.repo && GH.token) {
+    ghConnected = true;
+    updatePill();
+    cargarTodosLosArchivos();
+  } else {
+    setBanner('warning',
+      `<span>⚠</span>
+       <span>Configura GitHub para habilitar la gestión de archivos.</span>
+       <button class="banner-btn" onclick="openGhModal()">⚙ Configurar ahora</button>`
+    );
+    UNIDADES.forEach(u => SEMANAS.forEach(s => {
+      const id = `list-u${u.num}-s${s}`;
+      const ul = document.getElementById(id);
+      if (ul) ul.innerHTML = `<li class="empty-msg">Configura GitHub para ver archivos</li>`;
+    }));
+  }
+});
+</script>
+</body>
+</html>
